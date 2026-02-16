@@ -1,0 +1,200 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Group Detection | Patient Registration</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'css/patient_registration.css' %}">
+</head>
+
+<body>
+
+    <!-- Sidebar (Reused from Dashboard) -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-icon-sm">
+                <i class="fas fa-droplet"></i>
+            </div>
+            <div class="logo-text">Blood Group <br><span>Detection</span></div>
+            <div class="close-sidebar" id="closeSidebar"><i class="fas fa-times"></i></div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="{% url 'dashboard' %}" class="nav-item">
+                <i class="fas fa-th-large"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="{% url 'patient_registration' %}" class="nav-item active">
+                <i class="fas fa-user-plus"></i>
+                <span>Patient Registration</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-history"></i>
+                <span>Scan History</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-chart-bar"></i>
+                <span>Analytics</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-users"></i>
+                <span>Patients</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-profile">
+                <div class="user-avatar">
+                    <span>{{ request.user.username|slice:":2"|upper }}</span>
+                </div>
+                <div class="user-info">
+                    <span class="user-name">{{ request.user.username }}</span>
+                    <span class="user-role">Hematologist</span>
+                </div>
+            </div>
+            <a href="#" class="logout-link">Log Out</a>
+        </div>
+    </aside>
+
+    <!-- Overlay for Mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+        <!-- Mobile Header wrapper to show drawer toggle -->
+        <!-- We use the dashboard header style but simplified for this page's specific look -->
+        <header class="top-header mobile-header-only" style="background: transparent; padding-bottom: 0;">
+            <div class="mobile-menu-btn" id="openSidebar" style="color: white; font-size: 1.2rem;">
+                <i class="fas fa-bars"></i>
+            </div>
+            <!-- Empty div to balance if needed, or just let the back button in content handle it -->
+        </header>
+
+        <div class="registration-container">
+            <!-- Header with Back Button and Title -->
+            <div class="page-header" style="background: transparent; padding-left: 0; padding-right: 0;">
+                <a href="{% url 'dashboard' %}" class="back-btn"><i class="fas fa-arrow-left"></i></a>
+                <h2 class="page-title">Patient Registration</h2>
+                <div style="width: 24px;"></div> <!-- Spacer to balance back button -->
+            </div>
+
+            <!-- Avatar -->
+            <div class="avatar-section">
+                <div class="avatar-wrapper">
+                    <img src="https://ui-avatars.com/api/?name=Sarah+Jenkins&background=random" alt="Patient"
+                        class="avatar-img">
+                    <div class="edit-avatar-btn">
+                        <i class="fas fa-pen"></i>
+                    </div>
+                </div>
+                <div class="avatar-hint">Tap photo to update patient image</div>
+            </div>
+
+            <!-- Form -->
+            <div class="section-label">Personal Details</div>
+
+            <form action="{% url 'patient_registration' %}" method="post">
+                {% csrf_token %}
+
+                {% if messages %}
+                <div class="messages" style="margin-bottom: 20px;">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}"
+                        style="padding: 10px; border-radius: 5px; margin-bottom: 5px; background: rgba(255,255,255,0.1); color: white;">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Full Name -->
+                <div class="form-group">
+                    <label class="input-label">Full Name <span class="required-star">*</span></label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-user input-icon"></i>
+                        <input type="text" class="form-control" name="full_name" placeholder="Enter patient name"
+                            required>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 15px;">
+                    <!-- Age -->
+                    <div class="form-group" style="flex: 1;">
+                        <label class="input-label">Age <span class="required-star">*</span></label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-calendar-alt input-icon"></i>
+                            <input type="number" class="form-control" name="age" placeholder="25" required>
+                        </div>
+                    </div>
+
+                    <!-- Gender -->
+                    <div class="form-group" style="flex: 1;">
+                        <label class="input-label">Gender <span class="required-star">*</span></label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-venus-mars input-icon"></i>
+                            <select class="form-control" name="gender" required
+                                style="background: transparent; color: white; border: none; width: 100%; outline: none; appearance: none;">
+                                <option value="" disabled selected>Select</option>
+                                <option value="Male" style="color: black;">Male</option>
+                                <option value="Female" style="color: black;">Female</option>
+                                <option value="Other" style="color: black;">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Email Address -->
+                <div class="form-group">
+                    <label class="input-label">Email Address <span class="required-star">*</span></label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-envelope input-icon"></i>
+                        <input type="email" class="form-control" name="email" placeholder="sarah.j@example.com"
+                            required>
+                    </div>
+                </div>
+
+                <!-- Phone Number -->
+                <div class="form-group">
+                    <label class="input-label">Phone Number <span class="required-star">*</span></label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-phone-alt input-icon"></i>
+                        <input type="tel" class="form-control" name="phone" placeholder="+1 234 567 890" required>
+                    </div>
+                </div>
+
+                <!-- Address -->
+                <div class="form-group">
+                    <label class="input-label">Address <span class="required-star">*</span></label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-map-marker-alt input-icon"></i>
+                        <input type="text" class="form-control" name="address" placeholder="42 Medical Plaza, Tech City"
+                            required>
+                    </div>
+                </div>
+
+                <!-- Ready to Scan Button -->
+                <!-- Note: The user requested 'Ready to Scan' button. 
+                      The form action might initially go to 'predict' or a new 'save_patient' view.
+                      For now I'll link it to the 'predict' page as likely next step or verify flow.
+                      Since user said "add one button ready to scan", I assume this submits and goes to scan.
+                  -->
+                <button type="submit" class="submit-btn">Ready to Scan</button>
+            </form>
+
+        </div>
+    </main>
+
+    <script src="{% static 'js/dashboard.js' %}"></script>
+</body>
+
+</html>

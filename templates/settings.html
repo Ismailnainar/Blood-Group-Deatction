@@ -1,0 +1,684 @@
+{% extends 'base_dashboard.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block header_title %}{{ page_title }}{% endblock %}
+{% block header_subtitle %}Manage your account security and system integrations.{% endblock %}
+
+{% block extra_css %}
+<style>
+    .settings-container {
+        max-width: 1000px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+
+    .settings-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .settings-tabs {
+        display: flex;
+        background: rgba(0, 0, 0, 0.3);
+        border-bottom: 1px solid var(--border-color);
+        padding: 0 20px;
+    }
+
+    .tab-btn {
+        padding: 20px 25px;
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        position: relative;
+    }
+
+    .tab-btn.active {
+        color: var(--primary-red);
+    }
+
+    .tab-btn.active::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: var(--primary-red);
+    }
+
+    .tab-content {
+        padding: 40px;
+        display: none;
+    }
+
+    .tab-content.active {
+        display: block;
+    }
+
+    .form-group {
+        margin-bottom: 25px;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+        font-weight: 500;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 12px 16px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        color: white;
+        font-size: 1rem;
+        transition: all 0.3s;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: var(--primary-red);
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    .btn-action {
+        padding: 12px 25px;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        border: none;
+        font-size: 0.95rem;
+    }
+
+    .btn-primary {
+        background: var(--primary-red);
+        color: white;
+        box-shadow: 0 4px 15px rgba(255, 0, 0, 0.3);
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255, 0, 0, 0.4);
+    }
+
+    .btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        margin-right: 10px;
+    }
+
+    .otp-input-group {
+        display: none;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .api-card {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .api-info h4 {
+        margin-bottom: 5px;
+        font-size: 1rem;
+    }
+
+    .api-key-masked {
+        font-family: monospace;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+
+    .status-badge {
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .status-active {
+        background: rgba(0, 255, 0, 0.1);
+        color: #00ff00;
+    }
+
+    .status-inactive {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-muted);
+    }
+
+    .audit-log-list {
+        margin-top: 20px;
+    }
+
+    .audit-item {
+        padding: 15px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+
+    .audit-info p {
+        font-size: 0.95rem;
+        margin-bottom: 3px;
+    }
+
+    .audit-date {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+
+    .audit-user {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--primary-red);
+    }
+
+    #otp-timer {
+        font-size: 0.85rem;
+        color: var(--primary-red);
+        margin-top: 10px;
+    }
+
+    .password-toggle-wrapper {
+        position: relative;
+    }
+
+    .password-toggle-btn {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        padding: 5px;
+        z-index: 10;
+    }
+
+    .password-toggle-btn:hover {
+        color: white;
+    }
+
+    /* Settings Responsiveness */
+    @media (max-width: 768px) {
+        .settings-container {
+            margin: 10px auto;
+            padding: 0 10px;
+        }
+
+        .settings-tabs {
+            overflow-x: auto;
+            white-space: nowrap;
+            padding: 0 10px;
+            scrollbar-width: none;
+            /* Firefox */
+        }
+
+        .settings-tabs::-webkit-scrollbar {
+            display: none;
+            /* Chrome/Safari */
+        }
+
+        .tab-btn {
+            padding: 15px 20px;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+
+        .tab-content {
+            padding: 25px 15px;
+        }
+
+        #otp-step div[style*="grid-template-columns"] {
+            grid-template-columns: 1fr !important;
+            gap: 0 !important;
+        }
+
+        .api-card {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 15px;
+        }
+
+        .api-card div[style*="display: flex"] {
+            width: 100%;
+            justify-content: space-between;
+        }
+
+        .audit-item {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .audit-details {
+            text-align: left !important;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 10px;
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="settings-container">
+    <div class="settings-card">
+        <div class="settings-tabs">
+            <button class="tab-btn active" data-tab="password">Change Password</button>
+            <button class="tab-btn" data-tab="ai">AI Integration</button>
+            <button class="tab-btn" data-tab="audit">Audit Logs</button>
+        </div>
+
+        <!-- Password Tab -->
+        <div class="tab-content active" id="password-tab">
+            <h3 style="margin-bottom: 10px;">Security Verification</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 30px;">
+                To change your password, we need to verify your identity with a one-time password (OTP) sent to
+                your registered email.
+            </p>
+
+            <div id="email-step">
+                <div class="form-group">
+                    <label class="form-label">Username or Email</label>
+                    <input type="text" id="verify-email" class="form-input" placeholder="Enter your username or email">
+                </div>
+                <button onclick="requestOTP()" id="btn-send-otp" class="btn-action btn-primary">
+                    <i class="fas fa-paper-plane" style="margin-right: 8px;"></i> Send Verification OTP
+                </button>
+            </div>
+
+            <div id="otp-step" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">Enter 6-Digit OTP</label>
+                    <input type="text" id="otp-code" class="form-input" placeholder="000000" maxlength="6">
+                    <div id="otp-timer"></div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="form-group">
+                        <label class="form-label">New Password</label>
+                        <input type="password" id="new-password" class="form-input" placeholder="********">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Confirm New Password</label>
+                        <input type="password" id="confirm-password" class="form-input" placeholder="********">
+                    </div>
+                </div>
+
+                <div style="margin-top: 10px;">
+                    <button onclick="resetPassword()" class="btn-action btn-primary">Reset Password</button>
+                    <button onclick="cancelReset()" class="btn-action btn-secondary">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Integration Tab -->
+        <div class="tab-content" id="ai-tab">
+            <div style="margin-bottom: 30px;">
+                <h3 style="margin-bottom: 5px;">AI System Integration</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem;">Configure system-wide AI service API keys for
+                    different providers.</p>
+            </div>
+
+            <div
+                style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); border-radius: 12px; padding: 30px;">
+                <div class="form-group">
+                    <label class="form-label">AI Provider</label>
+                    <select id="api-provider" class="form-input" onchange="loadProviderSettings()">
+                        <option value="gemini">Google Gemini</option>
+                        <option value="openai">OpenAI</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">API Key</label>
+                    <div class="password-toggle-wrapper">
+                        <input type="password" id="api-key" class="form-input" placeholder="Enter API key...">
+                        <button type="button" class="password-toggle-btn" onclick="toggleApiKeyVisibility()">
+                            <i class="fas fa-eye" id="api-key-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group" style="display: flex; align-items: center; gap: 15px;">
+                    <label class="form-label" style="margin-bottom: 0;">Service Status</label>
+                    <select id="api-status" class="form-input" style="width: auto; min-width: 150px;">
+                        <option value="true">Active</option>
+                        <option value="false">Inactive</option>
+                    </select>
+                </div>
+
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.05);">
+                    <button onclick="saveAPI()" class="btn-action btn-primary" id="btn-save-api">
+                        <i class="fas fa-save" style="margin-right: 8px;"></i> Save Settings
+                    </button>
+                </div>
+            </div>
+
+            <div style="margin-top: 40px;">
+                <h4
+                    style="margin-bottom: 15px; font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase;">
+                    Configured Services</h4>
+                <div id="services-list">
+                    {% if ai_settings %}
+                    {% for provider, setting in ai_settings.items %}
+                    <div class="api-card">
+                        <div class="api-info">
+                            <h4>{{ setting.get_provider_display }}</h4>
+                            <div class="api-key-masked">
+                                {% if provider in decrypted_keys %}
+                                ●●●●●●●●●●●●{{ decrypted_keys|get_item:provider|slice:"-4:" }}
+                                {% else %}
+                                Not configured
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <span
+                                class="status-badge {% if setting.status %}status-active{% else %}status-inactive{% endif %}">
+                                {% if setting.status %}Active{% else %}Inactive{% endif %}
+                            </span>
+                            <button
+                                onclick="editProvider('{{ provider }}', '{{ decrypted_keys|get_item:provider }}', '{{ setting.status|lower }}')"
+                                class="btn-action btn-secondary"
+                                style="padding: 8px 15px; font-size: 0.8rem;">Edit</button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p
+                        style="color: var(--text-muted); font-size: 0.9rem; text-align: center; padding: 20px; background: rgba(0,0,0,0.2); border-radius: 10px;">
+                        No AI services configured yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Audit Logs Tab -->
+        <div class="tab-content" id="audit-tab">
+            <h3 style="margin-bottom: 10px;">Security Audit Logs</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 30px;">Recent sensitive
+                actions performed on your account.</p>
+
+            <div class="audit-log-list">
+                {% for log in audit_logs %}
+                <div class="audit-item">
+                    <div class="audit-info">
+                        <p>{{ log.action }}</p>
+                        <span class="audit-date">{{ log.created_at|date:"d M Y, h:i A" }}</span>
+                        {% if log.ip_address %}
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">
+                            <i class="fas fa-network-wired" style="margin-right: 5px;"></i> IP: {{
+                            log.ip_address }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="audit-details" style="text-align: right;">
+                        <div class="audit-user">{{ log.user.username }}</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted); max-width: 250px;">
+                            {{ log.details }}
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+                    <p>No audit logs available.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Tab functionality
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tabId = btn.getAttribute('data-tab');
+
+            tabBtns.forEach(b => b.classList.remove('active'));
+            tabContents.forEach(c => c.classList.remove('active'));
+
+            btn.classList.add('active');
+            document.getElementById(`${tabId}-tab`).classList.add('active');
+        });
+    });
+
+    // OTP Timer
+    let timerInterval;
+    function startOTPTimer(duration) {
+        let timer = duration, minutes, seconds;
+        const display = document.getElementById('otp-timer');
+        clearInterval(timerInterval);
+
+        timerInterval = setInterval(function () {
+            minutes = parseInt(timer / 60, 10);
+            seconds = parseInt(timer % 60, 10);
+
+            minutes = minutes < 10 ? "0" + minutes : minutes;
+            seconds = seconds < 10 ? "0" + seconds : seconds;
+
+            display.textContent = "OTP expires in: " + minutes + ":" + seconds;
+
+            if (--timer < 0) {
+                clearInterval(timerInterval);
+                display.textContent = "OTP has expired. Please request a new one.";
+                display.style.color = "#ff4444";
+            }
+        }, 1000);
+    }
+
+    // Backend Integration
+    function requestOTP() {
+        const email = document.getElementById('verify-email').value;
+        if (!email) {
+            alert('Please enter your email or username.');
+            return;
+        }
+
+        const btn = document.getElementById('btn-send-otp');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+
+        const formData = new FormData();
+        formData.append('email', email);
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+        fetch("{% url 'send_settings_otp' %}", {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.getElementById('email-step').style.display = 'none';
+                    document.getElementById('otp-step').style.display = 'block';
+                    startOTPTimer(300); // 5 minutes
+                } else {
+                    alert(data.message);
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-paper-plane" style="margin-right: 8px;"></i> Send Verification OTP';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to send OTP. Please check console.');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane" style="margin-right: 8px;"></i> Send Verification OTP';
+            });
+    }
+
+    function resetPassword() {
+        const otp = document.getElementById('otp-code').value;
+        const newPass = document.getElementById('new-password').value;
+        const confirmPass = document.getElementById('confirm-password').value;
+
+        if (!otp || !newPass || !confirmPass) {
+            alert('All fields are required.');
+            return;
+        }
+
+        if (newPass !== confirmPass) {
+            alert('Passwords do not match.');
+            return;
+        }
+
+        // Strong Password Validation: Min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        if (!passwordRegex.test(newPass)) {
+            alert('Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, a number, and a special character.');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('otp', otp);
+        formData.append('new_password', newPass);
+        formData.append('confirm_password', confirmPass);
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+        fetch("{% url 'reset_password_settings' %}", {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('Password reset successfully.');
+                    window.location.reload();
+                } else {
+                    alert(data.message);
+                }
+            });
+    }
+
+    function cancelReset() {
+        document.getElementById('email-step').style.display = 'block';
+        document.getElementById('otp-step').style.display = 'none';
+        clearInterval(timerInterval);
+    }
+
+    // AI Settings Logic
+    const decryptedKeys = JSON.parse('{{ decrypted_keys_json|safe|default:"{}" }}');
+    const statusDict = JSON.parse('{{ status_json|safe|default:"{}" }}');
+
+    window.addEventListener('DOMContentLoaded', () => {
+        loadProviderSettings();
+    });
+
+    function loadProviderSettings() {
+        const provider = document.getElementById('api-provider').value;
+        const keyInput = document.getElementById('api-key');
+        const statusInput = document.getElementById('api-status');
+
+        if (decryptedKeys[provider]) {
+            keyInput.value = decryptedKeys[provider];
+        } else {
+            keyInput.value = '';
+        }
+
+        if (statusDict[provider] !== undefined) {
+            statusInput.value = statusDict[provider].toString();
+        } else {
+            statusInput.value = 'true';
+        }
+    }
+
+    function toggleApiKeyVisibility() {
+        const input = document.getElementById('api-key');
+        const eye = document.getElementById('api-key-eye');
+        if (input.type === 'password') {
+            input.type = 'text';
+            eye.classList.remove('fa-eye');
+            eye.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            eye.classList.remove('fa-eye-slash');
+            eye.classList.add('fa-eye');
+        }
+    }
+
+    function saveAPI() {
+        const key = document.getElementById('api-key').value;
+        const provider = document.getElementById('api-provider').value;
+        const status = document.getElementById('api-status').value;
+        const btn = document.getElementById('btn-save-api');
+
+        if (!key) {
+            alert('API Key is required.');
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+        const formData = new FormData();
+        formData.append('api_key', key);
+        formData.append('provider', provider);
+        formData.append('status', status);
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+        fetch("{% url 'update_ai_api' %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert(data.message);
+                    window.location.reload();
+                } else {
+                    alert(data.message);
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-save" style="margin-right: 8px;"></i> Save Settings';
+                }
+            })
+            .catch(error => {
+                alert('Operation failed.');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save" style="margin-right: 8px;"></i> Save Settings';
+            });
+    }
+
+    function editProvider(provider, key, status) {
+        document.getElementById('api-provider').value = provider;
+        loadProviderSettings();
+
+        // Scroll to form
+        const aiTab = document.getElementById('ai-tab');
+        aiTab.scrollIntoView({ behavior: 'smooth' });
+        document.getElementById('api-key').focus();
+    }
+</script>
+{% endblock %}

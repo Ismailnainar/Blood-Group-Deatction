@@ -1,0 +1,718 @@
+{% extends 'base_dashboard.html' %}
+{% load static %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block header_title %}Overview{% endblock %}
+{% block header_subtitle %}Welcome back, here's today's blood analysis report.{% endblock %}
+
+{% block content %}
+<!-- Stats Grid -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-header">
+            <i class="fas fa-fingerprint"></i> TOTAL SCANS
+        </div>
+        <div class="stat-value">
+            {{ total_scans }} <span class="trend up">+12%</span>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-header">
+            <i class="fas fa-check-circle"></i> ACCURACY
+        </div>
+        <div class="stat-value">
+            {{ accuracy }} <span class="unit">%</span>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-header">
+            <i class="fas fa-users"></i> ACTIVE USERS
+        </div>
+        <div class="stat-value">
+            {{ active_users }}
+            <div class="user-stack">
+                <span class="user-dot" style="background: #444;"></span>
+                <span class="user-dot" style="background: #666;"></span>
+                <span class="user-dot" style="background: #ff0000;"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-header">
+            <i class="fas fa-history"></i> LAST RESULT
+        </div>
+        <div class="stat-value">
+            {{ last_result }} <span class="badge-new">NEW</span>
+        </div>
+    </div>
+</div>
+
+<!-- Middle Section: Distribution & Status -->
+<div class="middle-grid">
+
+    <!-- Group Distribution Chart -->
+    <div class="chart-card">
+        <div class="card-header">
+            <h3>Group Distribution</h3>
+            <div style="flex-grow:1"></div>
+        </div>
+
+        <div class="chart-content">
+            <div class="donut-chart-container">
+                <div class="donut-chart">
+                    <div class="center-text">
+                        <span class="label">Total</span>
+                        <span class="value">{{ total_scans }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="chart-legend">
+                {% for group in group_distribution %}
+                <div class="legend-item">
+                    <span class="dot" data-group="{{ group.result }}"></span>
+                    <span class="legend-label">{{ group.result }}</span>
+                    <span class="legend-val">{{ group.count }}</span>
+                </div>
+                {% empty %}
+                <div class="legend-item"><span class="legend-label">No Data</span></div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- System Status Cards -->
+    <div class="status-grid">
+        <div class="status-card">
+            <div class="status-icon"><i class="fas fa-brain"></i></div>
+            <div class="status-info">
+                <div class="status-label">ML MODEL</div>
+                <div class="status-sub">v2.4.1 Stable</div>
+            </div>
+            <div class="status-badge active">ACTIVE</div>
+        </div>
+
+        <div class="status-card">
+            <div class="status-icon"><i class="fas fa-fingerprint"></i></div>
+            <div class="status-info">
+                <div class="status-label">SCANNER</div>
+                <div class="status-sub">Optical Sensor</div>
+            </div>
+            <div class="status-badge ready">READY</div>
+        </div>
+
+        <div class="status-card">
+            <div class="status-icon"><i class="fas fa-database"></i></div>
+            <div class="status-info">
+                <div class="status-label">DATABASE</div>
+                <div class="status-sub">Connected</div>
+            </div>
+            <div class="status-badge online">ONLINE</div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Detections Table -->
+<div class="table-card">
+    <div class="card-header">
+        <h3>Recent Detections</h3>
+        <div class="table-actions">
+            <i class="fas fa-sliders-h"></i>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>PATIENT NAME</th>
+                    <th>SCAN DATE</th>
+                    <th>BLOOD GROUP</th>
+                    <th>REPORT STATUS</th>
+                    <th>ACTION</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for scan in recent_detections %}
+                <tr>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div class="patient-avatar-mini">
+                                {{ scan.patient.full_name|slice:":1" }}
+                            </div>
+                            <div style="font-weight: 500;">{{ scan.patient.full_name }}</div>
+                        </div>
+                    </td>
+                    <td>{{ scan.created_at|date:"d M Y, h:i A" }}</td>
+                    <td><span class="group-badge {{ scan.result }}">{{ scan.result }}</span></td>
+                    <td>
+                        {% if scan.report_sent %}
+                        <span class="status-tag verified" style="background: rgba(16, 185, 129, 0.1); color: #10b981;">
+                            <i class="fas fa-check-circle"></i> Sent
+                        </span>
+                        {% else %}
+                        <a href="{% url 'send_report' scan.id %}" style="text-decoration: none;">
+                            <span class="status-tag"
+                                style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; cursor: pointer;">
+                                <i class="fas fa-paper-plane"></i> Send Now
+                            </span>
+                        </a>
+                        {% endif %}
+                    </td>
+                    <td class="action-cell">
+                        <div class="action-dropdown">
+                            <button class="action-btn" onclick="toggleDropdown(event, '{{ scan.id }}')">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <div class="dropdown-menu" id="dropdown-{{ scan.id }}">
+                                <a href="{% url 'report_detail' scan.id %}">
+                                    <i class="fas fa-eye"></i> View Report
+                                </a>
+                                <a href="{% url 'send_report' scan.id %}">
+                                    <i class="fas fa-paper-plane"></i> Send Report
+                                </a>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card-footer-link">
+        <a href="{% url 'scan_history' %}">View All History</a>
+    </div>
+</div>
+
+<!-- Details Modal -->
+<div id="detailsModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-file-medical"></i> Patient Analysis Report</h2>
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+        </div>
+        <div class="modal-body" id="modalBody">
+            <div class="loader-container" id="modalLoader">
+                <div class="loader"></div>
+                <p>Fetching patient details...</p>
+            </div>
+            <div id="modalData" style="display: none;">
+                <div class="details-grid">
+                    <div class="details-section">
+                        <h3><i class="fas fa-user"></i> Patient Information</h3>
+                        <div class="info-row"><span>Full Name:</span> <strong id="det-name"></strong></div>
+                        <div class="info-row"><span>Age / Gender:</span> <strong id="det-age-gender"></strong></div>
+                        <div class="info-row"><span>Email:</span> <strong id="det-email"></strong></div>
+                        <div class="info-row"><span>Phone:</span> <strong id="det-phone"></strong></div>
+                        <div class="info-row"><span>Address:</span> <strong id="det-address"></strong></div>
+                    </div>
+                    <div class="details-section result-box">
+                        <h3><i class="fas fa-microchip"></i> Detection Result</h3>
+                        <div class="blood-group-display" id="det-blood-group">A+</div>
+                        <div class="accuracy-score">Accuracy: <span id="det-confidence"></span></div>
+                        <div class="status-indicator">
+                            <span id="det-report-status" class="status-tag"></span>
+                        </div>
+                    </div>
+                    <div class="details-section full-span">
+                        <h3><i class="fas fa-fingerprint"></i> Biometric Reference</h3>
+                        <div class="biometric-preview">
+                            <img id="det-image" src="" alt="Fingerprint">
+                        </div>
+                    </div>
+                    <div class="details-section full-span meta-info">
+                        <span>Scan Date: <strong id="det-date"></strong></span>
+                        <span>Analysis ID: #<strong id="det-id"></strong></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-close" onclick="closeModal()">Close Report</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Action Dropdown */
+    .action-cell {
+        position: relative;
+    }
+
+    .action-btn {
+        background: none;
+        border: none;
+        color: #a1a1aa;
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 50%;
+        transition: all 0.3s;
+    }
+
+    .action-btn:hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: white;
+    }
+
+    .dropdown-menu {
+        position: absolute;
+        right: 0;
+        top: 100%;
+        width: 200px;
+        /* Increased fixed width */
+        height: auto !important;
+        background: #1a1a1a;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        display: none;
+        z-index: 9999;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        overflow: hidden !important;
+        /* Force hide scrollbar */
+        animation: slideDown 0.2s ease;
+        padding: 8px 0;
+    }
+
+    .dropdown-menu a {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 16px;
+        color: #a1a1aa;
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+    }
+
+    .dropdown-menu a:hover {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.85);
+        z-index: 1000;
+        backdrop-filter: blur(8px);
+        padding: 20px;
+    }
+
+    .modal-content {
+        background: #0f0f0f;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        width: 100%;
+        max-width: 700px;
+        margin: 40px auto;
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
+    }
+
+    .modal-header {
+        padding: 20px 30px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-header h2 {
+        font-size: 1.25rem;
+        color: white;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .modal-header h2 i {
+        color: #ef4444;
+    }
+
+    .close-modal {
+        color: #a1a1aa;
+        font-size: 28px;
+        cursor: pointer;
+    }
+
+    .modal-body {
+        padding: 30px;
+    }
+
+    .details-grid {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 30px;
+    }
+
+    .details-section h3 {
+        font-size: 0.85rem;
+        color: #a1a1aa;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        padding-bottom: 10px;
+    }
+
+    .info-row {
+        margin-bottom: 12px;
+        font-size: 0.95rem;
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+    }
+
+    .info-row span {
+        color: #a1a1aa;
+    }
+
+    .result-box {
+        text-align: center;
+        background: rgba(255, 255, 255, 0.02);
+        padding: 20px;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .blood-group-display {
+        width: 80px;
+        height: 80px;
+        background: radial-gradient(circle at 30% 30%, #ff4b4b, #8b0000);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 15px;
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: white;
+        box-shadow: 0 10px 20px rgba(239, 68, 68, 0.3);
+    }
+
+    .accuracy-score {
+        font-size: 0.85rem;
+        color: #a1a1aa;
+        margin-bottom: 10px;
+    }
+
+    .full-span {
+        grid-column: span 2;
+    }
+
+    .biometric-preview {
+        width: 100%;
+        height: 200px;
+        background: #000;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    .biometric-preview img {
+        height: 100%;
+        object-fit: contain;
+        opacity: 0.8;
+    }
+
+    .meta-info {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.85rem;
+        color: #a1a1aa;
+        padding-top: 20px;
+        margin-top: 10px;
+    }
+
+    .modal-footer {
+        padding: 20px 30px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        text-align: right;
+    }
+
+    .btn-close {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: white;
+        padding: 10px 24px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .btn-close:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .status-tag {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .loader {
+        border: 3px solid rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        border-top: 3px solid #ef4444;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    .loader-container {
+        text-align: center;
+        padding: 40px 0;
+    }
+
+    .loader-container p {
+        color: #a1a1aa;
+        font-size: 0.9rem;
+    }
+
+    .patient-avatar-mini {
+        width: 30px;
+        height: 30px;
+        background: var(--accent-bg);
+        color: var(--primary-red);
+        border: 1px solid rgba(255, 0, 0, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.8rem;
+    }
+
+    /* Modal Responsiveness */
+    @media (max-width: 600px) {
+        .modal {
+            padding: 10px;
+        }
+
+        .modal-content {
+            margin: 20px auto;
+            max-height: calc(100vh - 40px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .details-grid {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        .full-span {
+            grid-column: span 1;
+        }
+
+        .blood-group-display {
+            width: 60px;
+            height: 60px;
+            font-size: 1.8rem;
+        }
+
+        .meta-info {
+            flex-direction: column;
+            gap: 10px;
+            text-align: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Global Fixed Dropdown (Portal) -->
+<div id="fixed-dropdown-container" class="dropdown-menu"
+    style="position: fixed; display: none; z-index: 10000; width: 200px; padding: 8px 0; max-height: 300px; margin: 0;">
+</div>
+
+<script>
+    let activeDropdownId = null;
+
+    function toggleDropdown(e, id) {
+        e.stopPropagation();
+        e.preventDefault();
+
+        const container = document.getElementById('fixed-dropdown-container');
+        const sourceContent = document.getElementById('dropdown-' + id);
+
+        // If clicking same button, close it
+        if (activeDropdownId === id && container.style.display === 'block') {
+            closeFixedDropdown();
+            return;
+        }
+
+        // Copy content
+        container.innerHTML = sourceContent.innerHTML;
+
+        // Show to calculate size?
+        container.style.display = 'block';
+        container.style.opacity = '0'; // Hide briefly while positioning
+
+        // Position it
+        const button = e.currentTarget;
+        const rect = button.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+
+        // Reset classes/styles that might interfere
+        container.style.top = 'auto';
+        container.style.bottom = 'auto';
+        container.style.left = 'auto';
+        container.style.right = 'auto';
+
+        // X Position: Align right edge of menu with right edge of button (or slightly left)
+        // rect.right is the right edge of button
+        // We want (rect.right - menuWidth) as left
+        const menuWidth = 200; // Fixed width from CSS
+        let leftPos = rect.right - menuWidth;
+        if (leftPos < 10) leftPos = 10; // Margin safety
+
+        container.style.left = leftPos + 'px';
+
+        // Y Position: Check space below
+        const spaceBelow = viewportHeight - rect.bottom;
+        const menuHeight = container.offsetHeight || 100; // fallback
+
+        if (spaceBelow < (menuHeight + 20)) {
+            // Open Upwards
+            // Bottom of menu = Top of button - gap
+            const bottomPos = viewportHeight - rect.top + 5;
+            container.style.bottom = bottomPos + 'px';
+            container.style.transformOrigin = 'bottom right';
+        } else {
+            // Open Downwards
+            const topPos = rect.bottom + 5;
+            container.style.top = topPos + 'px';
+            container.style.transformOrigin = 'top right';
+        }
+
+        container.style.opacity = '1';
+        activeDropdownId = id;
+    }
+
+    function closeFixedDropdown() {
+        const container = document.getElementById('fixed-dropdown-container');
+        if (container) {
+            container.style.display = 'none';
+        }
+        activeDropdownId = null;
+    }
+
+    // Close on global click
+    window.addEventListener('click', function (event) {
+        if (!event.target.closest('#fixed-dropdown-container') && !event.target.closest('.action-btn')) {
+            closeFixedDropdown();
+        }
+        if (event.target.id === 'detailsModal') {
+            closeModal();
+        }
+    });
+
+    // Handle scrolling closes dropdown to avoid detached menu
+    window.addEventListener('scroll', function () {
+        if (activeDropdownId) closeFixedDropdown();
+    }, true);
+
+    // Existing modal logic
+    function closeModal() {
+        document.getElementById('detailsModal').style.display = 'none';
+    }
+
+    // Expose viewDetails used in old code if needed, but links are usually direct hrefs
+    // If viewDetails logic was used, it needs to be available globally.
+
+    function viewDetails(id) {
+        const modal = document.getElementById('detailsModal');
+        const loader = document.getElementById('modalLoader');
+        const dataDiv = document.getElementById('modalData');
+
+        modal.style.display = 'block';
+        loader.style.display = 'block';
+        dataDiv.style.display = 'none';
+
+        fetch(`/analysis-details/${id}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('det-name').textContent = data.patient_name;
+                    document.getElementById('det-age-gender').textContent = `${data.age} / ${data.gender}`;
+                    document.getElementById('det-email').textContent = data.email;
+                    document.getElementById('det-phone').textContent = data.phone;
+                    document.getElementById('det-address').textContent = data.address;
+                    document.getElementById('det-blood-group').textContent = data.blood_group;
+                    document.getElementById('det-confidence').textContent = data.confidence;
+                    document.getElementById('det-date').textContent = data.date;
+                    document.getElementById('det-id').textContent = id;
+
+                    const statusTag = document.getElementById('det-report-status');
+                    if (data.report_sent) {
+                        statusTag.textContent = 'Report Sent';
+                        statusTag.style.background = 'rgba(16, 185, 129, 0.1)';
+                        statusTag.style.color = '#10b981';
+                    } else {
+                        statusTag.textContent = 'Pending Email';
+                        statusTag.style.background = 'rgba(245, 158, 11, 0.1)';
+                        statusTag.style.color = '#f59e0b';
+                    }
+
+                    const img = document.getElementById('det-image');
+                    if (data.image_url) {
+                        img.src = data.image_url;
+                        img.style.display = 'block';
+                    } else {
+                        img.style.display = 'none';
+                    }
+
+                    loader.style.display = 'none';
+                    dataDiv.style.display = 'block';
+                }
+            })
+            .catch(err => {
+                console.error('Error fetching details:', err);
+                loader.innerHTML = `<p style="color: #ef4444">Error loading patient data.</p>`;
+            });
+    }
+
+</script>
+{% endblock %}

@@ -1,0 +1,267 @@
+{% extends 'base_dashboard.html' %}
+{% load static %}
+
+{% block title %}Scan History{% endblock %}
+
+{% block header_title %}Scan History{% endblock %}
+{% block header_subtitle %}Comprehensive records of all blood analysis scans.{% endblock %}
+
+{% block extra_css %}
+<style>
+    .search-container {
+        margin-bottom: 25px;
+        display: flex;
+        gap: 15px;
+        align-items: center;
+    }
+
+    .search-wrapper {
+        position: relative;
+        flex: 1;
+    }
+
+    .search-wrapper i {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+    }
+
+    .search-input {
+        width: 100%;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 12px 15px 12px 45px;
+        color: white;
+        font-family: inherit;
+        transition: all 0.3s;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: var(--primary-red);
+        box-shadow: 0 0 10px rgba(255, 0, 0, 0.1);
+    }
+
+    .filter-btn {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        color: white;
+        padding: 12px 20px;
+        border-radius: 12px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 14px;
+    }
+
+    .thumbnail-mini {
+        width: 40px;
+        height: 40px;
+        background: #000;
+        border-radius: 6px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        object-fit: cover;
+    }
+
+    /* Pagination */
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        margin-top: 30px;
+    }
+
+    .page-link {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        color: var(--text-muted);
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .page-link:hover,
+    .page-link.active {
+        background: var(--primary-red);
+        color: white;
+        border-color: var(--primary-red);
+    }
+
+    .page-link.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .patient-avatar-mini {
+        width: 32px;
+        height: 32px;
+        background: var(--accent-bg);
+        color: var(--primary-red);
+        border: 1px solid rgba(255, 0, 0, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.85rem;
+    }
+
+    .empty-state {
+        padding: 60px 20px;
+        text-align: center;
+        color: var(--text-muted);
+    }
+
+    .empty-state i {
+        font-size: 50px;
+        margin-bottom: 20px;
+        opacity: 0.3;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="search-container">
+    <form action="." method="GET" class="search-wrapper">
+        <i class="fas fa-search"></i>
+        <input type="text" name="q" value="{{ search_query }}" class="search-input"
+            placeholder="Search by patient name, blood group, or ID...">
+        <input type="hidden" name="sort" value="{{ sort_by }}">
+    </form>
+    <div class="filter-dropdown">
+        <button class="filter-btn" id="sortToggle">
+            <i class="fas fa-sort-amount-down"></i> Sort:
+            {% if sort_by == '-created_at' %}
+            Newest
+            {% elif sort_by == 'created_at' %}
+            Oldest
+            {% else %}
+            Status
+            {% endif %}
+        </button>
+    </div>
+</div>
+
+<div class="table-card">
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>SCAN ID</th>
+                    <th>PATIENT</th>
+                    <th>FINGERPRINT</th>
+                    <th>GROUP</th>
+                    <th>CONFIDENCE</th>
+                    <th>DATE & TIME</th>
+                    <th>ACTION</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for scan in page_obj %}
+                <tr>
+                    <td><span style="color: #666; font-family: monospace;">#{{ scan.id }}</span></td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div class="patient-avatar-mini">{{ scan.patient.full_name|slice:":1" }}</div>
+                            <div style="font-weight: 500;">{{ scan.patient.full_name }}</div>
+                        </div>
+                    </td>
+                    <td>
+                        {% if scan.image %}
+                        <img src="{{ scan.image.url }}" class="thumbnail-mini" alt="Scan">
+                        {% else %}
+                        <div class="thumbnail-mini" style="display:flex; align-items:center; justify-content:center;"><i
+                                class="fas fa-image" style="opacity:0.2"></i></div>
+                        {% endif %}
+                    </td>
+                    <td><span class="group-badge {{ scan.result|default:'Unknown' }}">{{ scan.result }}</span>
+                    </td>
+                    <td>
+                        <div class="confidence-bar-wrapper">
+                            <div class="confidence-bar-bg">
+                                <div class="confidence-bar-fill" data-confidence="{{ scan.conf_f }}"></div>
+                            </div>
+                            <span style="font-size: 0.75rem; color: #00ff00;">{{ scan.conf_f }}</span>
+                        </div>
+                    </td>
+                    <td>{{ scan.created_at|date:"d M Y, h:i A" }}</td>
+                    <td>
+                        <a href="{% url 'report_detail' scan.id %}" class="nav-item"
+                            style="padding: 6px 12px; font-size: 0.75rem; background: rgba(255,255,255,0.05);">
+                            <i class="fas fa-file-medical"></i> View Report
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7">
+                        <div class="empty-state">
+                            <i class="fas fa-search"></i>
+                            <p>No scan records found matching your search.</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}&sort={{ sort_by }}"
+            class="page-link"><i class="fas fa-chevron-left"></i></a>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+        <a href="#" class="page-link active">{{ num }}</a>
+        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %} <a
+            href="?page={{ num }}{% if search_query %}&q={{ search_query }}{% endif %}&sort={{ sort_by }}"
+            class="page-link">{{ num }}</a>
+            {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}&sort={{ sort_by }}"
+                class="page-link">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+            {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('sortToggle').addEventListener('click', function () {
+        let currentSort = new URLSearchParams(window.location.search).get('sort') || '-created_at';
+        let newSort = (currentSort === '-created_at') ? 'created_at' : '-created_at';
+
+        let url = new URL(window.location.href);
+        url.searchParams.set('sort', newSort);
+        window.location.href = url.href;
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.confidence-bar-fill').forEach(bar => {
+            const width = bar.getAttribute('data-confidence');
+            if (width) {
+                bar.style.width = width;
+            }
+        });
+    });
+</script>
+{% endblock %}

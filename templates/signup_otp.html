@@ -1,0 +1,99 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Group Detection | Verify Identity</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/signup.css' %}">
+</head>
+
+<body>
+
+    <div class="signup-container">
+
+        <div class="signup-header">
+            <a href="{% url 'signup_email' %}" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <div class="brand-text">
+                <span class="brand-sub">SECURITY CHECK</span>
+            </div>
+        </div>
+
+        <div class="icon-circle-container">
+            <div class="icon-circle-outer" style="border-color: rgba(255,0,0,0.2);">
+                <div class="icon-circle-inner" style="background: rgba(40,10,10,1);">
+                    <i class="fas fa-user-lock" style="color: #ff3333;"></i>
+                </div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-bottom: 30px;">
+            <h2 class="step-title">Verify Identity</h2>
+            <p class="step-desc" style="margin-bottom: 20px;">
+                Enter the 6-digit security code sent to <br>
+                <span style="color:white; font-family: monospace;">{{ email }}</span>
+            </p>
+
+            {% if messages %}
+            {% for message in messages %}
+            <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+                {{ message }}
+            </div>
+            {% endfor %}
+            {% endif %}
+
+            <form method="POST" action="{% url 'signup_otp' %}">
+                {% csrf_token %}
+
+                <!-- OTP Inputs -->
+                <div class="otp-container" style="justify-content: center; gap: 10px;">
+                    <input type="text" name="otp_1" class="otp-box active" maxlength="1" required autofocus>
+                    <input type="text" name="otp_2" class="otp-box" maxlength="1" required>
+                    <input type="text" name="otp_3" class="otp-box" maxlength="1" required>
+                    <input type="text" name="otp_4" class="otp-box" maxlength="1" required>
+                    <input type="text" name="otp_5" class="otp-box" maxlength="1" required>
+                    <input type="text" name="otp_6" class="otp-box" maxlength="1" required>
+                </div>
+
+                <!-- Hidden Full OTP Input (populated by JS) -->
+                <input type="hidden" name="otp" id="full_otp">
+
+                <div class="resend-timer">
+                    <div class="timer-badge">
+                        <i class="fas fa-stopwatch"></i> <span id="timer">02:00</span>
+                    </div>
+                    <div class="resend-text">
+                        Didn't receive the code? <a href="{% url 'signup_email' %}" class="resend-link">Resend now</a>
+                    </div>
+                </div>
+
+                <button type="submit" class="action-btn">
+                    Authenticate <i class="fas fa-fingerprint"></i>
+                </button>
+            </form>
+        </div>
+
+        <!-- Keypad Visual -->
+        <div class="keypad-grid">
+            <div class="key-num">1</div>
+            <div class="key-num">2</div>
+            <div class="key-num">3</div>
+            <div class="key-num">4</div>
+            <div class="key-num">5</div>
+            <div class="key-num">6</div>
+            <div class="key-num">7</div>
+            <div class="key-num">8</div>
+            <div class="key-num">9</div>
+        </div>
+
+    </div>
+
+    <script src="{% static 'js/signup.js' %}"></script>
+</body>
+
+</html>

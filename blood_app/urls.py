@@ -1,0 +1,30 @@
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('', views.splash, name='landing'),
+    path('home/', views.home, name='home'),
+    path('login/', views.login_view, name='login_view'),
+    path('signup/', views.signup_email_view, name='signup_email'),
+    path('signup/otp/', views.signup_otp_view, name='signup_otp'),
+    path('signup/password/', views.signup_password_view, name='signup_password'),
+    path('dashboard/', views.dashboard_view, name='dashboard'),
+    path('predict/', views.predict, name='predict'),
+    path('train/', views.train_model_view, name='train'),
+    path('detection/<int:patient_id>/', views.detection_view, name='detection_view'),
+    path('send-report/<int:analysis_id>/', views.send_report_view, name='send_report'),
+    path('analysis-details/<int:analysis_id>/', views.get_analysis_details, name='get_analysis_details'),
+    path('history/', views.scan_history_view, name='scan_history'),
+    path('report/<int:analysis_id>/', views.report_detail_view, name='report_detail'),
+    path('settings/', views.settings_view, name='settings'),
+    path('settings/send-otp/', views.send_otp_view, name='send_settings_otp'),
+    path('settings/reset-password/', views.verify_otp_password_view, name='reset_password_settings'),
+    path('settings/update-ai-api/', views.update_ai_api_view, name='update_ai_api'),
+    path('chatbot/', views.chatbot_view, name='chatbot'),
+    path('logout/', views.logout_view, name='logout'),
+    path('notifications/get/', views.get_notifications, name='get_notifications'),
+    path('notifications/mark-read/<int:notif_id>/', views.mark_notification_read, name='mark_notification_read'),
+    path('forgot-password/', views.forgot_password_view, name='forgot_password'),
+    path('forgot-password/otp/', views.forgot_password_otp_view, name='forgot_password_otp'),
+    path('forgot-password/reset/', views.forgot_password_reset_view, name='forgot_password_reset'),
+]

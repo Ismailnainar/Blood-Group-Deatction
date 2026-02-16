@@ -1,0 +1,348 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Group Detection | {% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dashboard_notifications.css' %}">
+    <style>
+        .header-action-btn,
+        .header-logout-btn {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .header-action-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .header-logout-btn:hover {
+            background: rgba(255, 0, 0, 0.1);
+            color: var(--primary-red);
+            border-color: var(--primary-red);
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+
+    <!-- Sidebar (Drawer on Mobile, Fixed on Desktop) -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-icon-sm">
+                <i class="fas fa-droplet"></i>
+            </div>
+            <div class="logo-text">Blood Group <br><span>Detection</span></div>
+            <div class="close-sidebar" id="closeSidebar"><i class="fas fa-times"></i></div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="{% url 'dashboard' %}"
+                class="nav-item {% if active_page == 'dashboard' or request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                <i class="fas fa-th-large"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="{% url 'home' %}"
+                class="nav-item {% if active_page == 'home' or request.resolver_match.url_name == 'home' %}active{% endif %}">
+                <i class="fas fa-user-plus"></i>
+                <span>Patient Registration</span>
+            </a>
+            <a href="{% url 'scan_history' %}"
+                class="nav-item {% if active_page == 'scan_history' or request.resolver_match.url_name == 'scan_history' or request.resolver_match.url_name == 'report_detail' %}active{% endif %}">
+                <i class="fas fa-history"></i>
+                <span>Scan History</span>
+            </a>
+            <div class="nav-item-dropdown">
+                <a href="#" class="nav-item" onclick="toggleDropdown(event, 'analytics-dropdown')">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Analytics</span>
+                    <i class="fas fa-chevron-right dropdown-arrow"
+                        style="margin-left: auto; font-size: 10px; transition: transform 0.3s;"></i>
+                </a>
+                <div id="analytics-dropdown" class="dropdown-content"
+                    style="display: none; padding-left: 45px; flex-direction: column; gap: 5px; margin-top: 5px;">
+                    <a href="{% url 'chatbot' %}"
+                        class="nav-item sub-item {% if active_page == 'chatbot' %}active{% endif %}"
+                        style="padding: 8px 15px; font-size: 13px;">
+                        <i class="fas fa-robot" style="font-size: 12px;"></i>
+                        <span>Chatbot</span>
+                    </a>
+                    <!-- Future analytics items can go here -->
+                </div>
+            </div>
+            <!-- <a href="#" class="nav-item">
+                <i class="fas fa-users"></i>
+                <span>Patients</span>
+            </a> -->
+            <a href="{% url 'settings' %}"
+                class="nav-item {% if active_page == 'settings' or request.resolver_match.url_name == 'settings' or request.resolver_match.url_name == 'update_ai_api' or request.resolver_match.url_name == 'reset_password_settings' %}active{% endif %}">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-profile">
+                <div class="user-avatar">
+                    <span>{{ request.user.username|slice:":2"|upper }}</span>
+                </div>
+                <div class="user-info">
+                    <span class="user-name">{{ request.user.username }}</span>
+                    <span class="user-role">Hematologist</span>
+                </div>
+            </div>
+            <a href="{% url 'logout' %}" class="logout-link">
+                <i class="fas fa-sign-out-alt" style="margin-right: 10px;"></i> Log Out
+            </a>
+        </div>
+    </aside>
+
+    <!-- Overlay for Mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+        <!-- Header (Mobile Specific + Desktop Actions) -->
+        <header class="top-header">
+            <div class="mobile-menu-btn" id="openSidebar">
+                <i class="fas fa-bars"></i>
+            </div>
+            <div class="header-title">
+                <h1>{% block header_title %}{% endblock %}</h1>
+                <p>{% block header_subtitle %}{% endblock %}</p>
+            </div>
+            <div class="header-actions">
+                <a href="{% url 'dashboard' %}" class="header-action-btn" title="Dashboard">
+                    <i class="fas fa-th-large"></i>
+                </a>
+                <div class="notification-btn" id="notifBtn" onclick="toggleNotifications(event)">
+                    <i class="fas fa-bell"></i>
+                    <span class="dot" id="notifDot" style="display: none;"></span>
+
+                    <div class="notification-dropdown" id="notifDropdown">
+                        <div class="notif-header">
+                            <span>Notifications</span>
+                            <span class="mark-read-all" onclick="markAllRead(event)">Mark all read</span>
+                        </div>
+                        <div class="notif-list" id="notifList">
+                            <div class="notif-empty">
+                                <i class="far fa-bell"
+                                    style="font-size: 24px; color: var(--text-muted); opacity: 0.5; margin-bottom: 10px;"></i>
+                                <p>No notifications</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- <a href="{% url 'home' %}" class="new-scan-btn"> -->
+                <a href="{% url 'home' %}" class="new-scan-btn">
+                    <i class="fas fa-plus"></i> New Scan
+                </a>
+                <a href="{% url 'logout' %}" class="header-logout-btn" title="Log Out">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
+            </div>
+        </header>
+
+        {% if messages %}
+        <div class="messages-container" style="padding: 0 2rem; margin-top: 1rem;">
+            {% for message in messages %}
+            <div class="alert {{ message.tags }}" style="
+                padding: 12px 20px; 
+                border-radius: 8px; 
+                background: rgba(16, 185, 129, 0.1); 
+                border: 1px solid rgba(16, 185, 129, 0.3); 
+                color: #10b981; 
+                display: flex; 
+                align-items: center; 
+                gap: 10px;
+                font-size: 14px;
+                animation: slideDown 0.3s ease-out;
+            ">
+                <i class="fas fa-check-circle"></i>
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <script>
+            // Auto dismiss messages after 3 seconds
+            setTimeout(() => {
+                const messages = document.querySelectorAll('.messages-container .alert');
+                messages.forEach(msg => {
+                    msg.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                    msg.style.opacity = '0';
+                    msg.style.transform = 'translateY(-10px)';
+                    setTimeout(() => msg.remove(), 500);
+                });
+            }, 3000);
+        </script>
+
+        {% block content %}{% endblock %}
+
+    </main>
+
+    <script src="{% static 'js/dashboard.js' %}"></script>
+    <script>
+        function toggleDropdown(event, id) {
+            event.preventDefault();
+            const dropdown = document.getElementById(id);
+            const arrow = event.currentTarget.querySelector('.dropdown-arrow');
+            if (dropdown.style.display === 'none' || dropdown.style.display === '') {
+                dropdown.style.display = 'flex';
+                arrow.style.transform = 'rotate(90deg)';
+            } else {
+                dropdown.style.display = 'none';
+                arrow.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        // Auto-open if child is active
+        document.addEventListener('DOMContentLoaded', function () {
+            const activeSubItem = document.querySelector('.dropdown-content .active');
+            if (activeSubItem) {
+                const dropdown = activeSubItem.parentElement;
+                dropdown.style.display = 'flex';
+                const parentLink = dropdown.previousElementSibling;
+                const arrow = parentLink.querySelector('.dropdown-arrow');
+                if (arrow) arrow.style.transform = 'rotate(90deg)';
+            }
+            fetchNotifications();
+            // Poll for notifications every 30 seconds
+            setInterval(fetchNotifications, 30000);
+        });
+
+        // Notifications
+        function toggleNotifications(event) {
+            event.preventDefault();
+            const dropdown = document.getElementById('notifDropdown');
+            if (dropdown.classList.contains('show')) {
+                dropdown.classList.remove('show');
+            } else {
+                dropdown.classList.add('show');
+                fetchNotifications(); // Refresh on open
+            }
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function (event) {
+            const notifBtn = document.getElementById('notifBtn');
+            const dropdown = document.getElementById('notifDropdown');
+            if (notifBtn && !notifBtn.contains(event.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+
+        async function fetchNotifications() {
+            try {
+                const response = await fetch('/notifications/get/');
+                const data = await response.json();
+                if (data.status === 'success') {
+                    renderNotifications(data.notifications);
+                    updateBadge(data.unread_count);
+                }
+            } catch (error) {
+                console.error('Error fetching notifications:', error);
+            }
+        }
+
+        function renderNotifications(notifications) {
+            const list = document.getElementById('notifList');
+            if (notifications.length === 0) {
+                list.innerHTML = `
+                    <div class="notif-empty">
+                        <i class="far fa-bell" style="font-size: 24px; color: var(--text-muted); opacity: 0.5; margin-bottom: 10px;"></i>
+                        <p>No notifications</p>
+                    </div>`;
+                return;
+            }
+
+            let html = '';
+            notifications.forEach(notif => {
+                let iconClass = 'fa-info-circle';
+                let iconColor = '#888';
+
+                if (notif.type === 'login') {
+                    iconClass = 'fa-sign-in-alt';
+                    iconColor = '#3b82f6'; // Blue
+                } else if (notif.type === 'scan') {
+                    iconClass = 'fa-fingerprint';
+                    iconColor = '#ef4444'; // Red
+                } else if (notif.type === 'report') {
+                    iconClass = 'fa-envelope';
+                    iconColor = '#10b981'; // Green
+                }
+
+                html += `
+                    <div class="notif-item ${notif.is_read ? 'read' : 'unread'}" onclick="markRead(${notif.id}, this)">
+                        <div class="notif-icon" style="background: ${iconColor}20; color: ${iconColor};">
+                            <i class="fas ${iconClass}"></i>
+                        </div>
+                        <div class="notif-content">
+                            <div class="notif-title">${notif.title}</div>
+                            <div class="notif-msg">${notif.message}</div>
+                            <div class="notif-time">${notif.created_at}</div>
+                        </div>
+                        ${!notif.is_read ? '<div class="notif-dot"></div>' : ''}
+                    </div>
+                `;
+            });
+            list.innerHTML = html;
+        }
+
+        function updateBadge(count) {
+            const dot = document.getElementById('notifDot');
+            if (count > 0) {
+                dot.style.display = 'block';
+                // dot.innerText = count; // If we wanted a number
+            } else {
+                dot.style.display = 'none';
+            }
+        }
+
+        async function markRead(id, el) {
+            if (el.classList.contains('read')) return;
+
+            try {
+                await fetch(`/notifications/mark-read/${id}/`);
+                el.classList.remove('unread');
+                el.classList.add('read');
+                el.querySelector('.notif-dot')?.remove();
+
+                // Update local badge immediately
+                const dot = document.getElementById('notifDot');
+                // Simple re-fetch to sync count
+                fetchNotifications();
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        function markAllRead(event) {
+            event.stopPropagation();
+            // Implement mark all read API if strictly needed, or just iterate UI
+            // For now specific function wasn't requested in basic scope, 
+            // but for UI completeness we handle it simply or skip
+        }
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

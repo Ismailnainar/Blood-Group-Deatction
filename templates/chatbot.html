@@ -1,0 +1,329 @@
+{% extends 'base_dashboard.html' %}
+{% load static %}
+
+{% block title %}AI Chatbot{% endblock %}
+
+{% block header_title %}
+Medical AI Assistant
+{% endblock %}
+
+{% block header_subtitle %}
+Ask anything about blood groups, analysis results, or general medical inquiries.
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chat-container {
+        max-width: 900px;
+        margin: 20px auto;
+        height: calc(100vh - 250px);
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .chat-messages {
+        flex: 1;
+        padding: 30px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        background: radial-gradient(circle at 50% 50%, rgba(255, 0, 0, 0.02) 0%, transparent 70%);
+    }
+
+    .message {
+        max-width: 80%;
+        padding: 15px 20px;
+        border-radius: 15px;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        position: relative;
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .message.user {
+        align-self: flex-end;
+        background: var(--primary-red);
+        color: white;
+        border-bottom-right-radius: 2px;
+    }
+
+    .message.ai {
+        align-self: flex-start;
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-main);
+        border: 1px solid var(--border-color);
+        border-bottom-left-radius: 2px;
+    }
+
+    .chat-input-area {
+        padding: 20px 30px;
+        background: rgba(0, 0, 0, 0.2);
+        border-top: 1px solid var(--border-color);
+    }
+
+    .input-wrapper {
+        display: flex;
+        gap: 15px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-color);
+        border-radius: 15px;
+        padding: 5px 5px 5px 20px;
+        transition: all 0.3s;
+    }
+
+    .input-wrapper:focus-within {
+        border-color: var(--primary-red);
+        background: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 0 15px rgba(255, 0, 0, 0.1);
+    }
+
+    .chat-input {
+        flex: 1;
+        background: none;
+        border: none;
+        color: white;
+        padding: 10px 0;
+        font-size: 1rem;
+        outline: none;
+    }
+
+    .send-btn {
+        background: var(--primary-red);
+        color: white;
+        border: none;
+        width: 45px;
+        height: 45px;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .send-btn:hover {
+        transform: scale(1.05);
+        background: #cc0000;
+    }
+
+    .send-btn:disabled {
+        background: #444;
+        cursor: not-allowed;
+    }
+
+    .typing-indicator {
+        display: none;
+        align-self: flex-start;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 10px 20px;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin-bottom: 10px;
+    }
+
+    .dot-flashing {
+        position: relative;
+        width: 6px;
+        height: 6px;
+        border-radius: 5px;
+        background-color: var(--primary-red);
+        color: var(--primary-red);
+        animation: dot-flashing 1s infinite linear alternate;
+        animation-delay: 0.5s;
+        display: inline-block;
+        margin: 0 10px;
+    }
+
+    .dot-flashing::before,
+    .dot-flashing::after {
+        content: "";
+        display: inline-block;
+        position: absolute;
+        top: 0;
+    }
+
+    .dot-flashing::before {
+        left: -12px;
+        width: 6px;
+        height: 6px;
+        border-radius: 5px;
+        background-color: var(--primary-red);
+        color: var(--primary-red);
+        animation: dot-flashing 1s infinite alternate;
+        animation-delay: 0s;
+    }
+
+    .dot-flashing::after {
+        left: 12px;
+        width: 6px;
+        height: 6px;
+        border-radius: 5px;
+        background-color: var(--primary-red);
+        color: var(--primary-red);
+        animation: dot-flashing 1s infinite alternate;
+        animation-delay: 1s;
+    }
+
+    @keyframes dot-flashing {
+        0% {
+            background-color: var(--primary-red);
+        }
+
+        50%,
+        100% {
+            background-color: rgba(255, 0, 0, 0.2);
+        }
+    }
+
+    /* Scrollbar */
+    .chat-messages::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .chat-messages::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .chat-messages::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+    }
+
+    /* Chat Responsiveness */
+    @media (max-width: 768px) {
+        .chat-container {
+            margin: 0;
+            height: calc(100vh - 180px);
+            border-radius: 15px;
+        }
+
+        .chat-messages {
+            padding: 15px;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 90%;
+            padding: 12px 15px;
+            font-size: 0.9rem;
+        }
+
+        .chat-input-area {
+            padding: 15px;
+        }
+
+        .input-wrapper {
+            padding-left: 15px;
+        }
+
+        .chat-input {
+            font-size: 0.95rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="chat-container">
+    <div class="chat-messages" id="chat-messages">
+        <div class="message ai">
+            Hello! I'm your Medical AI Assistant. How can I help you today regarding blood group analysis or general
+            health inquiries?
+        </div>
+    </div>
+
+    <div class="typing-indicator" id="typing-indicator">
+        AI is thinking <div class="dot-flashing"></div>
+    </div>
+
+    <div class="chat-input-area">
+        <form id="chat-form" onsubmit="sendMessage(event)">
+            <div class="input-wrapper">
+                <input type="text" id="user-input" class="chat-input" placeholder="Type your message here..."
+                    autocomplete="off">
+                <button type="submit" id="send-btn" class="send-btn">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const chatMessages = document.getElementById('chat-messages');
+    const userInput = document.getElementById('user-input');
+    const chatForm = document.getElementById('chat-form');
+    const sendBtn = document.getElementById('send-btn');
+    const typingIndicator = document.getElementById('typing-indicator');
+
+    function appendMessage(text, type) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message ${type}`;
+        msgDiv.textContent = text;
+        chatMessages.appendChild(msgDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function sendMessage(event) {
+        event.preventDefault();
+        const message = userInput.value.trim();
+        if (!message) return;
+
+        appendMessage(message, 'user');
+        userInput.value = '';
+        userInput.disabled = true;
+        sendBtn.disabled = true;
+        typingIndicator.style.display = 'block';
+
+        const formData = new FormData();
+        formData.append('message', message);
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+        fetch("{% url 'chatbot' %}", {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                typingIndicator.style.display = 'none';
+                userInput.disabled = false;
+                sendBtn.disabled = false;
+                userInput.focus();
+
+                if (data.status === 'success') {
+                    appendMessage(data.response, 'ai');
+                } else {
+                    appendMessage("Error: " + data.message, 'ai');
+                }
+            })
+            .catch(error => {
+                typingIndicator.style.display = 'none';
+                userInput.disabled = false;
+                sendBtn.disabled = false;
+                appendMessage("Something went wrong. Please try again.", 'ai');
+                console.error('Error:', error);
+            });
+    }
+</script>
+{% endblock %}

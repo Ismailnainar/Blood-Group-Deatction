@@ -1,0 +1,228 @@
+/* Global Styles */
+:root {
+    --primary-red: #ff0000;
+    --dark-bg: #030000;
+    --text-white: #ffffff;
+    --text-muted: #888888;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--dark-bg);
+    color: var(--text-white);
+    font-family: 'Inter', sans-serif;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    position: relative;
+    /* Soft gradient background */
+    background: radial-gradient(circle at center, #1a0505 0%, #030000 70%);
+}
+
+/* Background Effects */
+.background-effects {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    z-index: 0;
+    pointer-events: none;
+}
+
+#ecgCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.15;
+    /* Very subtle */
+}
+
+.gradient-overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background: radial-gradient(circle, transparent 40%, rgba(0, 0, 0, 0.8) 100%);
+    z-index: 1;
+}
+
+/* Splash Container */
+.splash-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 600px;
+    position: relative;
+    z-index: 10;
+}
+
+/* Logo Section */
+.logo-wrapper {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 40px;
+    opacity: 0;
+    animation: fadeZoomIn 1.2s ease-out forwards;
+}
+
+.logo-core {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #400, #100);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 0 40px rgba(255, 0, 0, 0.4);
+    z-index: 5;
+    position: relative;
+    animation: softPulse 2.5s ease-in-out infinite;
+}
+
+.logo-icon {
+    font-size: 34px;
+    color: #ff3333;
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.3));
+}
+
+.pulse-ring {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 0, 0, 0.3);
+    opacity: 0;
+    animation: cleanRipple 2.5s infinite;
+}
+
+@keyframes fadeZoomIn {
+    from {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes softPulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 30px rgba(255, 0, 0, 0.3);
+    }
+
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 50px rgba(255, 0, 0, 0.5);
+    }
+}
+
+@keyframes cleanRipple {
+    0% {
+        transform: scale(0.8);
+        opacity: 0.5;
+    }
+
+    100% {
+        transform: scale(1.8);
+        opacity: 0;
+    }
+}
+
+/* Text Section */
+.text-container {
+    text-align: center;
+    margin-bottom: 50px;
+    opacity: 0;
+    animation: fadeInUp 1s ease-out forwards 0.5s;
+}
+
+.app-title {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--text-white);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    text-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+.app-subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    font-weight: 400;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Loading Section */
+.loading-container {
+    width: 250px;
+    text-align: center;
+    opacity: 0;
+    animation: fadeIn 1s ease-out forwards 1s;
+}
+
+.loading-text {
+    font-size: 11px;
+    color: #666;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+}
+
+.loading-bar-wrapper {
+    width: 100%;
+    height: 3px;
+    background: #111;
+    border-radius: 1.5px;
+    overflow: hidden;
+    position: relative;
+}
+
+.loading-bar-fill {
+    height: 100%;
+    background: #ff0000;
+    width: 0%;
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+    transition: width 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+    to {
+        opacity: 1;
+    }
+}

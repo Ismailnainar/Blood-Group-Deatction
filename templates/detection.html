@@ -1,0 +1,326 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* Professional Scanning Animation Styles */
+    .scanning-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.85);
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        backdrop-filter: blur(10px);
+    }
+
+    .scanner-container {
+        position: relative;
+        width: 300px;
+        height: 300px;
+        border: 2px solid rgba(239, 68, 68, 0.3);
+        border-radius: 20px;
+        overflow: hidden;
+        background: rgba(239, 68, 68, 0.02);
+        box-shadow: 0 0 50px rgba(239, 68, 68, 0.1);
+    }
+
+    .scanner-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.6;
+        transition: transform 0.3s ease;
+    }
+
+    .scanner-line {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: linear-gradient(to bottom, transparent, #ef4444, transparent);
+        box-shadow: 0 0 15px #ef4444;
+        animation: scan 2s linear infinite;
+        z-index: 2;
+    }
+
+    .scanner-pulse {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle, rgba(239, 68, 68, 0.2) 0%, transparent 70%);
+        animation: pulse 2s ease-out infinite;
+    }
+
+    @keyframes scan {
+        0% {
+            top: 0;
+        }
+
+        100% {
+            top: 100%;
+        }
+    }
+
+    @keyframes pulse {
+        0% {
+            transform: translate(-50%, -50%) scale(0.5);
+            opacity: 0;
+        }
+
+        50% {
+            opacity: 0.5;
+        }
+
+        100% {
+            transform: translate(-50%, -50%) scale(1.5);
+            opacity: 0;
+        }
+    }
+
+    .scanning-text {
+        margin-top: 30px;
+        color: white;
+        font-size: 1.2rem;
+        font-weight: 600;
+        letter-spacing: 1px;
+        animation: fadeInOut 1.5s infinite;
+    }
+
+    @keyframes fadeInOut {
+
+        0%,
+        100% {
+            opacity: 0.5;
+        }
+
+        50% {
+            opacity: 1;
+        }
+    }
+
+    /* Result Card Styles */
+    .result-container {
+        display: none;
+        animation: slideUp 0.5s ease;
+    }
+
+    .result-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 30px;
+        text-align: center;
+        backdrop-filter: blur(5px);
+    }
+
+    .result-group {
+        font-size: 4rem;
+        font-weight: 800;
+        color: var(--primary);
+        text-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+        margin: 10px 0;
+    }
+
+    .confidence-badge {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--primary);
+        padding: 5px 15px;
+        border-radius: 50px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        display: inline-block;
+        margin-bottom: 20px;
+    }
+
+    @keyframes slideUp {
+        from {
+            transform: translateY(20px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+</style>
+
+<div class="card" id="formCard">
+    <div style="text-align: center; margin-bottom: 20px;">
+        <h2 style="margin:0;">Fingerprint Detection</h2>
+        <p style="color: var(--text-secondary); margin-top: 5px;">
+            Scanning for: <strong>{{ patient.full_name }}</strong>
+        </p>
+    </div>
+
+    <div id="alertContainer"></div>
+
+    <form method="post" action="{% url 'predict' %}" enctype="multipart/form-data" id="uploadForm">
+        {% csrf_token %}
+        <input type="hidden" name="patient_id" value="{{ patient.id }}">
+
+        <div class="upload-area" id="dropZone">
+            <div class="upload-icon">
+                <i class="fas fa-fingerprint" style="font-size: 48px; color: var(--primary);"></i>
+            </div>
+            <p>Drag & Drop fingerprint image here or <strong>Browse</strong></p>
+            <input type="file" name="image" id="fileInput" accept="image/*" required>
+        </div>
+        <div id="previewContainer" style="display: none; margin-bottom: 20px; text-align: center;">
+            <img id="imagePreview" src="" alt="Preview"
+                style="max-width: 200px; border-radius: 10px; border: 2px solid var(--border);">
+        </div>
+
+        <button type="submit" class="btn" id="analyzeBtn">Analyze Fingerprint</button>
+    </form>
+</div>
+
+<!-- Scanning Overlay -->
+<div class="scanning-overlay" id="scanningOverlay">
+    <div class="scanner-container">
+        <div class="scanner-pulse"></div>
+        <div class="scanner-line"></div>
+        <img id="scanningThumbPreview" class="scanner-image" src="" alt="Scanning...">
+    </div>
+    <div class="scanning-text">Analyzing Fingerprint...</div>
+</div>
+
+<!-- Result Container -->
+<div class="result-container" id="resultContainer">
+    <div class="result-card">
+        <i class="fas fa-check-circle" style="font-size: 3rem; color: #10b981; margin-bottom: 20px;"></i>
+        <h3 style="margin: 0; color: white;">Analysis Complete</h3>
+        <p style="color: var(--text-secondary);">Detected Blood Group</p>
+        <div class="result-group" id="detectedGroup">--</div>
+        <div class="confidence-badge" id="confidenceVal">Confidence: --%</div>
+
+        <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+            <button onclick="window.location.reload()" class="btn"
+                style="background: rgba(255,255,255,0.1); color: white;">Scan Another</button>
+            <a id="dashboardLink" href="{% url 'dashboard' %}" class="btn">View Dashboard</a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const form = document.getElementById('uploadForm');
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const previewContainer = document.getElementById('previewContainer');
+    const imagePreview = document.getElementById('imagePreview');
+    const scanningOverlay = document.getElementById('scanningOverlay');
+    const scanningThumbPreview = document.getElementById('scanningThumbPreview');
+    const resultContainer = document.getElementById('resultContainer');
+    const formCard = document.getElementById('formCard');
+    const alertContainer = document.getElementById('alertContainer');
+
+    function showAlert(message, type = 'error') {
+        alertContainer.innerHTML = `
+            <div class="alert alert-${type}" style="padding: 10px; border-radius: 8px; margin-bottom: 15px; background: rgba(239,68,68, 0.1); color: #ef4444; border: 1px solid rgba(239,68,68, 0.2);">
+                <i class="fas fa-exclamation-triangle"></i> ${message}
+            </div>
+        `;
+    }
+
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.style.borderColor = 'var(--primary)';
+        dropZone.style.background = 'rgba(239, 68, 68, 0.05)';
+    });
+
+    dropZone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        dropZone.style.borderColor = 'var(--border)';
+        dropZone.style.background = 'transparent';
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.style.borderColor = 'var(--border)';
+        dropZone.style.background = 'transparent';
+
+        if (e.dataTransfer.files.length) {
+            fileInput.files = e.dataTransfer.files;
+            handleFile(e.dataTransfer.files[0]);
+        }
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        if (fileInput.files.length) {
+            handleFile(fileInput.files[0]);
+        }
+    });
+
+    function handleFile(file) {
+        if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                imagePreview.src = e.target.result;
+                scanningThumbPreview.src = e.target.result;
+                previewContainer.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        if (!fileInput.files.length) {
+            showAlert('Please select an image first.');
+            return;
+        }
+
+        // Show Animation
+        scanningOverlay.style.display = 'flex';
+        alertContainer.innerHTML = '';
+
+        const formData = new FormData(form);
+
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            const data = await response.json();
+
+            // Small delay to ensure animation feels "real"
+            setTimeout(() => {
+                scanningOverlay.style.display = 'none';
+
+                if (data.status === 'success') {
+                    formCard.style.display = 'none';
+                    resultContainer.style.display = 'block';
+                    document.getElementById('detectedGroup').innerText = data.result;
+                    document.getElementById('confidenceVal').innerText = `Confidence: ${data.confidence}`;
+                } else {
+                    showAlert(data.message || 'Analysis failed. Please try again.');
+                }
+            }, 2000);
+
+        } catch (error) {
+            scanningOverlay.style.display = 'none';
+            showAlert('An error occurred during analysis: ' + error.message);
+        }
+    });
+</script>
+{% endblock %}

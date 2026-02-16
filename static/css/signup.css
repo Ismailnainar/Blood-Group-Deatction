@@ -1,0 +1,538 @@
+/* Shared styles from login.css plus overrides */
+:root {
+    --primary-red: #ff0000;
+    --dark-bg: #0a0505;
+    --card-bg: rgba(20, 10, 10, 0.95);
+    --text-color: #ffffff;
+    --muted-text: #888888;
+    --input-bg: #1a0f0f;
+    --border-color: #331f1f;
+}
+
+body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background-color: var(--dark-bg);
+    color: var(--text-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+@media (max-width: 480px) {
+    body {
+        align-items: flex-start;
+        padding: 20px 0;
+    }
+
+    .signup-container {
+        padding: 10px;
+    }
+
+    .signup-header {
+        margin-bottom: 30px;
+        padding: 0 10px;
+    }
+
+    .brand-main {
+        font-size: 16px;
+    }
+
+    .signup-card {
+        padding: 20px;
+        margin: 0 10px;
+    }
+
+    .step-title {
+        font-size: 18px;
+    }
+
+    .otp-box {
+        width: 40px;
+        height: 50px;
+        font-size: 20px;
+    }
+
+    .keypad-grid {
+        gap: 10px;
+    }
+
+    .key-num {
+        font-size: 20px;
+    }
+}
+
+/* Background gradient from login.css can be reused or re-defined */
+body::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at center, rgba(255, 0, 0, 0.05) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: -1;
+}
+
+.signup-container {
+    width: 100%;
+    max-width: 420px;
+    padding: 20px;
+    position: relative;
+}
+
+/* Header with Back Button */
+.signup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+}
+
+.back-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted-text);
+    text-decoration: none;
+    transition: all 0.3s;
+}
+
+.back-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.brand-text {
+    text-align: right;
+}
+
+.brand-main {
+    font-size: 18px;
+    /* HEADING SIZE */
+    font-weight: 700;
+}
+
+.brand-main span {
+    color: var(--primary-red);
+}
+
+.brand-sub {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--primary-red);
+    text-transform: uppercase;
+    margin-top: 3px;
+}
+
+/* Fingerprint Icon Circle */
+.icon-circle-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 30px;
+}
+
+.icon-circle-outer {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 30px rgba(255, 0, 0, 0.05);
+}
+
+.icon-circle-inner {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    background: linear-gradient(145deg, #2a1111, #1a0505);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-red);
+    font-size: 24px;
+    border: 1px solid rgba(255, 0, 0, 0.1);
+}
+
+/* Signup Card */
+.signup-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 30px;
+    position: relative;
+}
+
+/* Step Title */
+.step-title {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: white;
+}
+
+.step-desc {
+    font-size: 12px;
+    color: var(--muted-text);
+    line-height: 1.5;
+    margin-bottom: 30px;
+}
+
+/* Inputs from login.css structure */
+.input-label-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.input-label {
+    font-size: 10px;
+    color: #cc3333;
+    /* Reddish */
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.input-required {
+    font-size: 10px;
+    color: #666;
+    text-transform: uppercase;
+}
+
+.input-wrapper {
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px 15px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.input-wrapper i {
+    color: #666;
+    margin-right: 15px;
+}
+
+.input-field {
+    background: transparent;
+    border: none;
+    color: white;
+    width: 100%;
+    outline: none;
+    font-family: inherit;
+}
+
+/* Autofill Hack */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px var(--input-bg) inset !important;
+    -webkit-text-fill-color: white !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+.action-btn {
+
+    width: 100%;
+    background: linear-gradient(90deg, #ff0000, #cc0000);
+    color: white;
+    border: none;
+    padding: 15px;
+    border-radius: 8px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.2s;
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 0, 0, 0.2);
+}
+
+/* Divider */
+.or-divider {
+    display: flex;
+    align-items: center;
+    margin: 30px 0;
+    color: #444;
+}
+
+.or-divider::before,
+.or-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #222;
+}
+
+.or-text {
+    padding: 0 10px;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #444;
+}
+
+.login-link {
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted-text);
+    cursor: pointer;
+    display: block;
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.login-link:hover {
+    color: white;
+}
+
+.login-link i {
+    margin-right: 8px;
+    color: var(--primary-red);
+}
+
+/* Progress/Security Footer */
+.security-footer {
+    text-align: center;
+    margin-top: 40px;
+}
+
+.encryption-text {
+    font-size: 9px;
+    color: #444;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.encryption-text i {
+    color: #00ff00;
+}
+
+/* Green shield */
+
+.progress-steps {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+}
+
+.step-line {
+    width: 40px;
+    height: 2px;
+    background: #222;
+    border-radius: 2px;
+}
+
+.step-line.active {
+    background: var(--primary-red);
+}
+
+.step-count {
+    text-align: center;
+    font-size: 9px;
+    color: #444;
+    margin-top: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* OTP Specific */
+.otp-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.otp-box {
+    width: 50px;
+    height: 60px;
+    border-radius: 12px;
+    background: #151010;
+    /* Slightly lighter than bg */
+    border: 1px solid #333;
+    /* Dark border */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: white;
+    text-align: center;
+    /* Center input text */
+}
+
+/* Active State for OTP Box */
+.otp-box.active {
+    border: 1px solid var(--primary-red);
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.2);
+    /* The red vertical bar cursor effect can be simulated with ::after if empty, but simple border is safer for input focus */
+}
+
+.resend-timer {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.timer-badge {
+    background: rgba(255, 0, 0, 0.1);
+    color: var(--primary-red);
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 12px;
+    border: 1px solid rgba(255, 0, 0, 0.2);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.resend-text {
+    font-size: 12px;
+    color: #666;
+    margin-top: 10px;
+}
+
+.resend-link {
+    color: #fff;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+/* Keypad Grid (Visual only as per design, functionally simple buttons) */
+.keypad-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-top: 30px;
+    text-align: center;
+}
+
+.key-num {
+    font-size: 24px;
+    color: white;
+    padding: 10px;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: background 0.2s;
+}
+
+.key-num:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+
+/* Password Strength Meter */
+.strength-meter {
+    display: flex;
+    gap: 5px;
+    margin-top: 5px;
+    margin-bottom: 20px;
+}
+
+.meter-bar {
+    height: 4px;
+    flex: 1;
+    background: #333;
+    border-radius: 2px;
+}
+
+.meter-bar.filled {
+    background: var(--primary-red);
+}
+
+.strength-text {
+    display: flex;
+    justify-content: space-between;
+    font-size: 9px;
+    text-transform: uppercase;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.strength-val {
+    color: var(--primary-red);
+}
+
+.requirements-list {
+    margin-top: 20px;
+}
+
+.req-item {
+    font-size: 11px;
+    color: #666;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.req-item i {
+    font-size: 12px;
+}
+
+.req-item.met {
+    color: white;
+}
+
+.req-item.met i {
+    color: var(--primary-red);
+}
+
+.req-item i.fa-circle {
+    font-size: 6px;
+    border: 1px solid #666;
+    padding: 2px;
+    border-radius: 50%;
+    opacity: 0.5;
+}
+
+.req-item.met i.fa-circle-check {
+    font-size: 12px;
+    border: none;
+    opacity: 1;
+}
+
+/* Alerts */
+.alert {
+    padding: 10px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    font-size: 12px;
+    text-align: center;
+}
+
+.alert-error {
+    background: rgba(255, 0, 0, 0.2);
+    border: 1px solid #ff0000;
+    color: #ffcccc;
+}
+
+.alert-success {
+    background: rgba(0, 255, 0, 0.2);
+    border: 1px solid #00ff00;
+    color: #ccffcc;
+}

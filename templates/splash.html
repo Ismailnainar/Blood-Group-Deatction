@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Group Detection | System Boot</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Load CSS from static folder -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/splash.css' %}">
+</head>
+
+<body>
+
+    <!-- Background -->
+    <div class="background-effects">
+        <canvas id="ecgCanvas"></canvas>
+        <div class="gradient-overlay"></div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="splash-container">
+
+        <!-- Logo Section -->
+        <div class="logo-wrapper">
+            <div class="logo-core">
+                <i class="fas fa-droplet logo-icon"></i>
+            </div>
+            <div class="pulse-ring"></div>
+        </div>
+
+        <!-- Text Section -->
+        <div class="text-container">
+            <h1 class="app-title">
+                BLOOD GROUP DETECTION
+            </h1>
+            <p class="app-subtitle">Advanced Biometric System</p>
+        </div>
+
+        <!-- Loading Section -->
+        <div class="loading-container">
+            <div class="loading-text">Initializing System...</div>
+            <div class="loading-bar-wrapper">
+                <div class="loading-bar-fill"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Script -->
+    <script src="{% static 'js/splash.js' %}"></script>
+</body>
+
+</html>

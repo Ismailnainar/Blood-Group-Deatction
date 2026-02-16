@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="card result-card">
+    <h1>Analysis Result</h1>
+    <p class="subtitle">Based on the uploaded image</p>
+
+    <div class="result-image-container">
+        <img src="{{ file_url }}" alt="Uploaded Image" class="result-image">
+    </div>
+
+    <div class="result-details">
+        <p>Detected Blood Group:</p>
+        <div class="blood-type">{{ result }}</div>
+
+        <p>Confidence:</p>
+        <div style="text-align: left;">
+            <span id="confidenceValue">{{ confidence }}</span>
+            <div class="confidence-bar">
+                <div class="confidence-fill" style="width: 0%" data-width="{{ confidence }}"></div>
+            </div>
+        </div>
+    </div>
+
+    <div style="margin-top: 30px; display: flex; gap: 10px; justify-content: center;">
+        <a href="{% url 'send_report' analysis.id %}" class="btn"
+            onclick="return confirm('Send report to {{ patient.email }}?')">
+            <i class="fas fa-envelope"></i> Send Report to Mail
+        </a>
+        <a href="{% url 'home' %}" class="btn btn-secondary">Analyze Another</a>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const fill = document.querySelector('.confidence-fill');
+        const width = fill.getAttribute('data-width');
+        // Parse "98.50%" to 98.50
+        const numericWidth = parseFloat(width);
+        setTimeout(() => {
+            fill.style.width = numericWidth + '%';
+        }, 300);
+    });
+</script>
+{% endblock %}
